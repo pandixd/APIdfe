@@ -1,0 +1,134 @@
+{% include 'layout.html' %}
+ <!-- Content Wrapper. Contains page content -->
+ <div class="content-wrapper">
+  <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Master Barang</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item">
+                <a href="/formmasterbarang">Tambah</a>
+              </li>
+              <li class="breadcrumb-item active">
+                <a href="/masterbarang">Data</a>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <!-- /.card-header -->
+              <div class="card-body">
+                <table class="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nama</th>
+                      <th>Harga</th>
+                      <th>Satuan</th>
+                      <th>Menghapus</th>
+                      <th>Mengupdate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for rs in data %}
+                    <tr>
+                      <td>{{ loop.index }}.</td>
+                      <td>{{ rs.1 }}</td>
+                      <td>{{ rs.2 }}</td>
+                      <td>{{ rs.3 }}</td>
+                      <td>
+
+                        <!-- Form Ubah -->
+                        <!-- <form action="/hapusdata/{{rs[0]}}" method="post">
+                          <button type="submit" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal{{rs[0]}}">
+                          Hapus
+                          </button>
+                        </form> -->
+                        <form action="/hapusdata/{{rs[0]}}" method="post">
+                          <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModal{{rs[0]}}">
+                          Hapus
+                          </button>
+                          
+                          <div class="modal fade" id="exampleModal{{rs[0]}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="exampleModalLabel">Konfirmasi</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  Apakah Yakin Hapus Data ini?
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-success" data-bs-dismiss="modal">Batal</button>
+                                  <button type="submit" class="btn btn-danger">Ya</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </form>
+                      </td>
+
+                      <td>
+                        <form action="/updatedata/{{rs[0]}}" method="POST">
+                          <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal2{{rs[0]}}">
+                            Ubah
+                            </button>
+                          <div class="modal fade" id="exampleModal2{{rs[0]}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="exampleModalLabel">Ubah Data</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <div class="mb-3">
+                                    <label for="nama" class="form-label">Nama</label>
+                                    <input value="{{rs[1]}}" type="text" class="form-control" name="nama" id="satuan" placeholder="nama ">
+                                  </div>
+
+                                  <div class="mb-3">
+                                    <label for="harga" class="form-label">Harga</label>
+                                    <input value="{{rs[2]}}" type="text" class="form-control" name="harga" id="harga" placeholder="Harga ">
+                                  </div>
+                                 
+                                  <div class="mb-3">
+                                    <label for="satuan" class="form-label">Satuan</label>
+                                    <input value="{{rs[3]}}" type="text" class="form-control" name="satuan" id="satuan" placeholder="Satuan ">
+                                  </div>
+    
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Batal</button>
+                                  <button type="submit" class="btn btn-success">Ubah</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </form>           
+                      </td>
+                    </tr>
+                    {% endfor%}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+{% include 'footer.html' %}

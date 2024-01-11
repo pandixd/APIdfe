@@ -1,0 +1,40 @@
+{% extends 'layout.html' %} {% block body %}
+
+<div id="converter-container" class="container mt-5">
+    <h1>Currency Converter</h1>
+    
+    <form method="post" action="/convert">
+        <div class="mb-3">
+            <label for="from_currency" class="form-label">From:</label>
+            <select class="form-select" name="from_currency" id="from_currency">
+                {% for currency in currencies %}
+                    <option value="{{ currency }}">{{ currency }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="to_currency" class="form-label">To:</label>
+            <select class="form-select" name="to_currency" id="to_currency">
+                {% for currency in currencies %}
+                    <option value="{{ currency }}">{{ currency }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="amount" class="form-label">Amount:</label>
+            <input type="text" class="form-control" name="amount" id="amount" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Convert</button>
+    </form>
+
+    {% if result %}
+        <h2 class="mt-4">Result:</h2>
+        <p>{{ result.amount }} {{ result.from_currency }} is equal to {{ result.converted_amount }} {{ result.to_currency }} (Exchange rate: {{ result.rate }})</p>
+    {% endif %}
+
+</div>
+
+{% endblock %}
