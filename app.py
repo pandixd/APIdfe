@@ -7,20 +7,36 @@ import mysql.connector
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
+from mysql.connector import Error
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
-app.secret_key = "elaundry_db"
+bcrypt = Bcrypt(app)
+app.secret_key = "your_secret_key"
 
-mysql = MySQL()
+db_config = {
+    "host": "mb9.h.filess.io",
+    "user": "MYDB_smilewhole",
+    "password": "807ab0fac72719d21102dba64b265bc0494f39fe",
+    "database": "MYDB_smilewhole",
+    "port": "3305",
+}
+
+# app = Flask(__name__)
+# app.secret_key = "-"
+
+# mysql = MySQL()
 
 API_KEY = 'fca_live_eSP74XCEzTfP2eJ3TNFAO8JV1h1aVxNcwTVfnG64'
 BASE_URL = 'https://open.er-api.com/v6/latest'
 
-app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''
-app.config['MYSQL_DATABASE_DB'] = 'elaundry_db'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
-mysql.init_app(app)
+
+# app.config['MYSQL_DATABASE_USER'] = 'root'
+# app.config['MYSQL_DATABASE_PASSWORD'] = ''
+# app.config['MYSQL_DATABASE_DB'] = 'elaundry_db'
+# app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+        
+# mysql.init_app(app)
 
 
 class RegisterForm(Form):
@@ -38,10 +54,6 @@ class RegisterForm(Form):
 class ArticleForm(Form):
     title = StringField('Title', [validators.Length(min=1, max=200)])
     body = TextAreaField('Body', [validators.Length(min=30)])
-
-
-API_KEY = 'fca_live_eSP74XCEzTfP2eJ3TNFAO8JV1h1aVxNcwTVfnG64'
-BASE_URL = 'https://open.er-api.com/v6/latest'
 
 
 @app.route('/convert', methods=['POST'])
@@ -100,66 +112,98 @@ def beranda():
     return render_template('beranda.html', currencies=currencies)
 
 
+# @app.route('/register', methods=['GET', 'POST'])
+# def register():
+#     form = RegisterForm(request.form)
+#     if request.method == 'POST' and form.validate():
+#         name = form.name.data
+#         email = form.email.data
+#         phone = form.phone.data
+#         username = form.username.data
+#         password = sha256_crypt.encrypt(str(form.password.data))
+
+#         conn = mysql.connect()
+#         cur = conn.cursor(pymysql.cursors.DictCursor)
+     
+#         cur.execute("INSERT INTO user(name, email, phone, username, password) VALUES(%s, %s, %s, %s, %s)", (name, email, phone, username, password))
+    
+#         conn.commit()
+     
+#         cur.close()
+#         flash('You are now registered and can log in', 'success')
+#         return redirect(url_for('login'))
+#     return render_template('register.html', form=form)
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        name = form.name.data
-        email = form.email.data
-        phone = form.phone.data
-        username = form.username.data
-        password = sha256_crypt.encrypt(str(form.password.data))
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        phone = request.form['phone']
+        username = request.form['username']
+        password = request.form['password']
 
-        conn = mysql.connect()
-        cur = conn.cursor(pymysql.cursors.DictCursor)
-     
-        cur.execute("INSERT INTO user(name, email, phone, username, password) VALUES(%s, %s, %s, %s, %s)", (name, email, phone, username, password))
-    
-        conn.commit()
-     
-        cur.close()
-        flash('You are now registered and can log in', 'success')
-        return redirect(url_for('login'))
+        hashed_password = sha256_crypt.encrypt(password)
+
+        try:
+            connection = mysql.connector.connect(**db_config)
+            cursor = connection.cursor()
+
+            query = "INSERT INTO user (name, email, phone, username, password) VALUES (%s, %s, %s, %s, %s)"
+            values = (name, email, phone, username, hashed_password)
+            cursor.execute(query, values)
+
+            connection.commit()
+
+            flash('Registration successful. You can now log in.', 'success')
+            return redirect(url_for('login'))
+
+        except mysql.connector.Error as err:
+            flash(f"Error: {err}", 'danger')
+
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+
     return render_template('register.html', form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-
         username = request.form['username']
         password_candidate = request.form['password']
 
-        conn = mysql.connect()
-        cur = conn.cursor(pymysql.cursors.DictCursor)
+        try:
+            connection = mysql.connector.connect(**db_config)
+            cursor = connection.cursor(dictionary=True)
 
- 
-        result = cur.execute("SELECT * FROM user WHERE username = %s", [username])
+            query = "SELECT * FROM user WHERE username = %s"
+            cursor.execute(query, (username,))
+            user = cursor.fetchone()
 
-        if result > 0:
-     
-            data = cur.fetchone()
-            password = data['password']
+            if user and sha256_crypt.verify(password_candidate, user['password']):
 
-
-            if sha256_crypt.verify(password_candidate, password):
-        
                 session['logged_in'] = True
-                session['username'] = username
+                session['username'] = user['username']
 
                 flash('You are now logged in', 'success')
                 return redirect(url_for('beranda'))
             else:
-                error = 'Invalid login'
-                return render_template('login.html', error=error)
+                flash('Invalid login', 'danger')
 
-            cur.close()
-        else:
-            error = 'Username not found'
-            return render_template('login.html', error=error)
+        except mysql.connector.Error as err:
+            flash(f"Error: {err}", 'danger')
+
+        finally:
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
 
     return render_template('login.html')
-    
+
 
 @app.route('/about')
 def about():
